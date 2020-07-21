@@ -10,6 +10,9 @@
       <detail-comment-info ref="comment" :comment-info="commentInfo"></detail-comment-info>
       <goods-list ref="recommend" :goods="recommend"></goods-list>
     </better-scroll>
+    <detail-bottom-bar @addCart="addToCart"></detail-bottom-bar>
+    <back-top class="back-top" v-show="isShowBackTop" @click.native="backClick"></back-top>
+    <!-- <toast :message="message" :show="show"></toast> -->
   </div>
 </template>
 
@@ -21,13 +24,17 @@
   import DetailGoodsInfo from './childcomps/DetailGoodsInfo'
   import DetailParamInfo from './childcomps/DetailParamInfo'
   import DetailCommentInfo from './childcomps/DetailCommentInfo'
+  import DetailBottomBar from './childcomps/DetailBottomBar'
 
   import BetterScroll from 'components/common/scroll/BetterScroll'
   import GoodsList from 'components/content/goods/GoodsList'
+  // import Toast from 'components/common/toast/Toast'
 
   import {getDetail, Goods, Shop, GoodsParam, getRecommend} from 'network/detail'
   import {debounce} from 'common/utils.js'
-  import {itemListenerMixin} from 'common/mixin.js'
+  import {itemListenerMixin, backTopMixin} from 'common/mixin.js'
+
+  import { mapActions } from 'vuex'
  
   export default {
     name: 'Detail',
@@ -40,8 +47,10 @@
       DetailGoodsInfo,
       DetailParamInfo,
       DetailCommentInfo,
-      GoodsList
+      GoodsList,
+      DetailBottomBar,
     },
+    mixins: [itemListenerMixin, backTopMixin],
     data() {
       return {
         iid: null,
@@ -55,7 +64,9 @@
         recommend: [],
         themeTopYs: [],
         getThemeTopY: null,
-        currentIndex: 0
+        currentIndex: 0,
+        // message: '',
+        // show: false
       }
     },
     // mixins: [itemListenerMixin],
@@ -105,6 +116,7 @@
 
         //4.给gatThemeTopY赋值
         this.getThemeTopY = debounce(() => {
+          this.$refs.scroll.refresh();
           this.themeTopYs.push(0);
           this.themeTopYs.push(this.$refs.params.$el.offsetTop);
           this.themeTopYs.push(this.$refs.comment.$el.offsetTop);
@@ -131,6 +143,7 @@
       
     },
     methods: {
+      ...mapActions(['addCart']),
       imgLoad() {
         // this.refresh();
         this.$refs.scroll.refresh();
@@ -164,7 +177,35 @@
                   this.$refs.nav.currentIndex = this.currentIndex;
                }
         }
+
+        //3.是否显示回到顶部
+        this.isShowBackTop = position.y < -2000;
+      },
+      addToCart() {
+        //1.获取购物车需要展示的商品信息
+        const product = {};
+        product.image = this.topImages[0];
+        product.title = this.goods.title;
+        product.desc = this.goods.desc;
+        product.price = this.goods.realPrice;
+        product.iid = this.iid;
+
+        //2.将商品获取到购物车里
+        // this.$store.dispatch('addCart', product).then(res => {
+        //   console.log(res);
+        // });
+        this.addCart(product).then(res => {
+          // this.message = res;
+          // this.show = true;
+          // setTimeout(() => {
+          //   this.show = false;
+          //   this.message = '';
+          // }, 1000)
+          this.$toast.show(res, 1000);
+         console.log(this.$toast);
+        }) 
       }
+      
     }
   }
 </script>
@@ -173,13 +214,12 @@
   .detail {
     position: relative;
     z-index: 9;
-    width: 96%;
     background-color: #fff;
     height: 100vh;
   }
 
   .content {
-    height: calc(100% - 44px);
+    height: calc(100% - 44px - 49px - 40px);
   }
 
   .detail-nav {
@@ -187,4 +227,5 @@
     z-index: 9;
     background-color: #fff;
   }
+
 </style>

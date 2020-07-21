@@ -33,10 +33,10 @@
 	import TabControl from 'components/content/tabControl/TabControl'
 	import GoodsList from 'components/content/goods/GoodsList'
 	import BetterScroll from 'components/common/scroll/BetterScroll'
-	import BackTop from 'components/content/backTop/BackTop'
 
 	import {getHomeData, getHomeGoods} from 'network/home'
 	import {debounce} from 'common/utils.js'
+	import {backTopMixin} from 'common/mixin.js'
 	export default {
 		name: 'Home',
 		components: {
@@ -47,7 +47,6 @@
 			TabControl,
 			GoodsList,
 			BetterScroll,
-			BackTop
 		},
 		data() {
 			return {
@@ -59,12 +58,12 @@
 					'sell': {page: 0, list: []}
 				},
 				currentType: 'pop',
-				isShowBackTop: false,
 				tabOffsetTop: 0,
 				isTabFixed: false,
 				saver: 0
 			}
 		},
+		mixins: [backTopMixin],
 		computed: {
 			showGoods() {
 				return this.goods[this.currentType].list;
@@ -112,9 +111,6 @@
 				this.$refs.tabControl1.currentIndex = index;
 				this.$refs.tabControl2.currentIndex = index;
 			},
-			backClick() {
-				this.$refs.scroll.scrollTo(0, 0, 500);
-			},
 			contentScroll(position) {
 				//判断BackTop是否显示
 				this.isShowBackTop = (-position.y) > 1000;
@@ -155,7 +151,6 @@
 	#home{
 		/* padding-top: 44px; */
 		height: 100vh;
-		width: 95%;
 		position: relative;
 	}
 	.home-nav{
